@@ -16,9 +16,9 @@ describe('http', function () {
       }
     }).export().handler;
 
-    expect(await handler({ body: '{"n":0}' })).toEqual({
-      body: '{"data":1}',
-      statusCode: 200
-    });
+    const res = await handler({ body: '{"n":0}' });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual('{"data":1}');
   });
 });

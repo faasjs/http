@@ -89,5 +89,10 @@ export class Http implements Plugin {
     if (typeof data.response.body !== 'undefined' && data.response.body !== 'string') {
       data.response.body = JSON.stringify(data.response.body);
     }
+
+    data.headers = Object.assign({
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Request-Id': (data.context ? data.context.request_id : new Date().getTime().toString())
+    }, data.headers || {});
   }
 }
