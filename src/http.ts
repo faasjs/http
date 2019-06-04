@@ -29,7 +29,7 @@ export class Http implements Plugin {
 
     if (!this.config.name) {
       // 若没有指定配置名，则读取默认配置
-      config = deepMerge(data.config.plugins.defaults.function, this.config, { config: Object.create(null) });
+      config = deepMerge(data.config.plugins.defaults.http, this.config, { config: Object.create(null) });
     } else {
       // 检查配置是否存在
       if (!data.config.plugins[this.config.name]) {
