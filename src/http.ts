@@ -90,7 +90,7 @@ export class Http implements Plugin {
       data.response.body = JSON.stringify(data.response.body);
     }
 
-    data.headers = Object.assign({
+    data.response.headers = Object.assign({
       'Content-Type': 'application/json; charset=UTF-8',
       'X-Request-Id': (data.context ? data.context.request_id : new Date().getTime().toString())
     }, data.headers || {});
