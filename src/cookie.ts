@@ -40,6 +40,7 @@ export class Cookie {
 
   public invoke (data: InvokeData) {
     this.cacheContent = data.event.headers.cookie;
+    this.headers = null;
     // 预读取 session
     if (this.session && this.config.session!.key) {
       this.session.invoke(this.read(this.config.session!.key));

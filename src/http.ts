@@ -18,6 +18,7 @@ export interface HttpConfig {
 
 export class Http implements Plugin {
   public readonly type: string;
+  public name?: string
   public response?: {
     statusCode: number;
     headers: {
@@ -29,47 +30,25 @@ export class Http implements Plugin {
   public cookie?: Cookie;
   public session?: Session;
   private config: {
-    name?: string;
-    type: string;
-    config: {
-      path?: string;
-      method?: number;
-      timeout?: number;
-      functionName?: string;
-      cookie: CookieOptions;
-      [key: string]: any;
-    };
+    path?: string;
+    method?: number;
+    timeout?: number;
+    functionName?: string;
+    cookie?: CookieOptions;
     [key: string]: any;
   };
 
   constructor (config: HttpConfig = Object.create(null)) {
     this.type = 'http';
-    this.config = deepMerge({
-      type: this.type,
-      config: {
-        cookie: {}
-      }
-    }, config);
+    this.name = config.name;
+    this.config = config.config || Object.create(null);
   }
 
   public async onDeploy (data: DeployData, next: Next) {
     data.logger!.debug('[Http] 组装网关配置');
     data.logger!.debug('%o', data);
 
-    let config;
-
-    if (!this.config.name) {
-      // 若没有指定配置名，则读取默认配置
-      config = deepMerge(data.config!.plugins.defaults.http, this.config);
-    } else {
-      // 检查配置是否存在
-      if (!data.config!.plugins[this.config.name]) {
-        throw Error(`[faas.yaml] Plugin not found: ${this.config.name}`);
-      }
-
-      // 合并默认配置
-      config = deepMerge(data.config!.plugins[this.config.name], this.config);
-    }
+    const config = deepMerge(data.plugins![this.name || this.type].config, this.config);
 
     data.logger!.debug('[Http] 组装完成 %o', config);
 
@@ -86,39 +65,44 @@ export class Http implements Plugin {
 
   public async onMount (data: MountData, next: Next) {
     // 初始化配置项
-    if (!this.config.name) {
-      this.config.name = data.config.plugins.defaults.http.name;
-      this.config = deepMerge(this.config, data.config.plugins.defaults.http);
+    if (!this.name) {
+      this.config = deepMerge(this.config, data.config.plugins.defaults.http.config);
     } else {
-      this.config = deepMerge(this.config, data.config.plugins[this.config.name!]);
+      this.config = deepMerge(this.config, data.config.plugins[this.name!].config);
     }
 
     // 初始化 Cookie
-    this.cookie = new Cookie(this.config.config.cookie);
+    this.cookie = new Cookie(this.config.cookie || {});
     this.session = this.cookie.session;
 
     await next();
   }
 
   public async onInvoke (data: InvokeData, next: Next) {
-    data.logger.debug('[Http] 初始化响应对象');
+    data.logger.debug('[Http][Before] begin');
+    data.logger.time('http');
 
-    data.logger.debug('[Http] 解析 body');
-    if (data.event.headers['Content-Type'] && data.event.headers['Content-Type'].includes('application/json')) {
+    if (data.event.headers && data.event.headers['Content-Type'] && data.event.headers['Content-Type'].includes('application/json')) {
+      data.logger.debug('[Http] Parse body');
       data.event.body = JSON.parse(data.event.body);
     }
 
-    data.logger.debug('[Http] 解析 cookie');
+    data.logger.debug('[Http] Parse cookie');
     this.cookie!.invoke(data);
 
+    data.logger.timeEnd('http', '[Http][Before] end');
+
     await next();
+
+    data.logger.debug('[Http][After] begin');
+    data.logger.time('http');
 
     // 检查 session 是否有变动
     if (this.session && this.session.changed) {
       this.cookie!.write(this.session.config.key, this.session!.encode(this.session.cacheContent));
     }
 
-    data.logger.debug('[Http] 补全 response');
+    data.logger.debug('[Http] Generate response');
     // 处理结果并返回
     if (typeof data.response === 'undefined' || data.response === null) {
       // 没有结果或结果内容为空时，直接返回 201
@@ -147,5 +131,7 @@ export class Http implements Plugin {
       'Content-Type': 'application/json; charset=UTF-8',
       'X-Request-Id': (data.context ? data.context.request_id : new Date().getTime().toString())
     }, this.cookie!.headers, data.response.headers || {});
+
+    data.logger.timeEnd('http', '[Http][After] end');
   }
 }
