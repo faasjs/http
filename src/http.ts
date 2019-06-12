@@ -48,7 +48,7 @@ export class Http implements Plugin {
     data.logger!.debug('[Http] 组装网关配置');
     data.logger!.debug('%o', data);
 
-    const config = deepMerge(data.plugins![this.name || this.type].config, this.config);
+    const config = deepMerge(data.plugins![this.name || this.type], { config: this.config });
 
     data.logger!.debug('[Http] 组装完成 %o', config);
 
