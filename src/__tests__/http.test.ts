@@ -74,10 +74,7 @@ describe('http', function () {
     };
     const handler = func.export().handler;
 
-    const res = await handler({
-      headers: {},
-      body: null
-    });
+    const res = await handler({});
 
     expect(res.statusCode).toEqual(500);
     expect(res.body).toEqual('{"error":{"message":"wrong"}}');

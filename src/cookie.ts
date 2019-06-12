@@ -39,7 +39,12 @@ export class Cookie {
   }
 
   public invoke (data: InvokeData) {
-    this.cacheContent = data.event.headers.cookie;
+    if (data.event.headers && data.event.headers.cookie) {
+      this.cacheContent = data.event.headers.cookie;
+    } else {
+      this.cacheContent = '';
+    }
+
     this.headers = null;
     // 预读取 session
     if (this.session && this.config.session!.key) {
