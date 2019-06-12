@@ -156,9 +156,7 @@ describe('session', function () {
 
       const res = await handler({
         key: 'key',
-        value: null,
-        headers: {
-        }
+        value: null
       });
 
 
