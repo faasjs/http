@@ -13,14 +13,12 @@ describe('session', function () {
     });
     func.config = {
       plugins: {
-        defaults: {
-          http: {
-            config: {
-              cookie: {
-                session: {
-                  key: 'key',
-                  secret: 'secret'
-                }
+        http: {
+          config: {
+            cookie: {
+              session: {
+                key: 'key',
+                secret: 'secret'
               }
             }
           }
@@ -84,14 +82,12 @@ describe('session', function () {
     });
     func.config = {
       plugins: {
-        defaults: {
-          http: {
-            config: {
-              cookie: {
-                session: {
-                  key: 'key',
-                  secret: 'secret'
-                }
+        http: {
+          config: {
+            cookie: {
+              session: {
+                key: 'key',
+                secret: 'secret'
               }
             }
           }
@@ -138,14 +134,12 @@ describe('session', function () {
       });
       func.config = {
         plugins: {
-          defaults: {
-            http: {
-              config: {
-                cookie: {
-                  session: {
-                    key: 'key',
-                    secret: 'secret'
-                  }
+          http: {
+            config: {
+              cookie: {
+                session: {
+                  key: 'key',
+                  secret: 'secret'
                 }
               }
             }
@@ -158,7 +152,6 @@ describe('session', function () {
         key: 'key',
         value: null
       });
-
 
       expect(session.decode(res.headers['Set-Cookie'].match('(^|;)\\s*key\\s*=\\s*([^;]+)')[2])).toEqual({
         a: 2,

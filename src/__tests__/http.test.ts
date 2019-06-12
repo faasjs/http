@@ -13,9 +13,7 @@ describe('http', function () {
 
     func.config = {
       plugins: {
-        defaults: {
-          http: {}
-        }
+        http: {}
       }
     };
     const handler = func.export().handler;
@@ -67,9 +65,7 @@ describe('http', function () {
 
     func.config = {
       plugins: {
-        defaults: {
-          http: {}
-        }
+        http: {}
       }
     };
     const handler = func.export().handler;

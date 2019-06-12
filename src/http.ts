@@ -48,7 +48,7 @@ export class Http implements Plugin {
     data.logger!.debug('[Http] 组装网关配置');
     data.logger!.debug('%o', data);
 
-    const config = deepMerge(data.plugins![this.name || this.type], { config: this.config });
+    const config = deepMerge(data.config!.plugins![this.name || this.type], { config: this.config });
 
     data.logger!.debug('[Http] 组装完成 %o', config);
 
@@ -65,11 +65,7 @@ export class Http implements Plugin {
 
   public async onMount (data: MountData, next: Next) {
     // 初始化配置项
-    if (!this.name) {
-      this.config = deepMerge(this.config, data.config.plugins.defaults.http.config);
-    } else {
-      this.config = deepMerge(this.config, data.config.plugins[this.name!].config);
-    }
+    this.config = deepMerge(this.config, data.config.plugins[this.name || this.type].config);
 
     // 初始化 Cookie
     this.cookie = new Cookie(this.config.cookie || {});

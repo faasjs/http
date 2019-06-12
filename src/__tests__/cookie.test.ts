@@ -12,9 +12,7 @@ describe('cookie', function () {
     });
     func.config = {
       plugins: {
-        defaults: {
-          http: {}
-        }
+        http: {}
       }
     };
     const handler = func.export().handler;
@@ -66,9 +64,7 @@ describe('cookie', function () {
     });
     func.config = {
       plugins: {
-        defaults: {
-          http: {}
-        }
+        http: {}
       }
     };
     const handler = func.export().handler;
@@ -105,12 +101,10 @@ describe('cookie', function () {
       });
       func.config = {
         plugins: {
-          defaults: {
-            http: {
-              config: {
-                cookie: {
-                  domain: 'domain.com'
-                }
+          http: {
+            config: {
+              cookie: {
+                domain: 'domain.com'
               }
             }
           }
@@ -135,12 +129,10 @@ describe('cookie', function () {
       });
       func.config = {
         plugins: {
-          defaults: {
-            http: {
-              config: {
-                cookie: {
-                  path: '/path'
-                }
+          http: {
+            config: {
+              cookie: {
+                path: '/path'
               }
             }
           }
@@ -165,12 +157,10 @@ describe('cookie', function () {
       });
       func.config = {
         plugins: {
-          defaults: {
-            http: {
-              config: {
-                cookie: {
-                  expires: 1
-                }
+          http: {
+            config: {
+              cookie: {
+                expires: 1
               }
             }
           }
@@ -195,12 +185,10 @@ describe('cookie', function () {
       });
       func.config = {
         plugins: {
-          defaults: {
-            http: {
-              config: {
-                cookie: {
-                  expires: '1'
-                }
+          http: {
+            config: {
+              cookie: {
+                expires: '1'
               }
             }
           }
