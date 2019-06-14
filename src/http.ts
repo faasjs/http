@@ -6,7 +6,6 @@ import { Session } from './session';
 export interface HttpConfig {
   name?: string;
   config?: {
-    path?: string;
     method?: string;
     timeout?: number;
     functionName?: string;
@@ -30,7 +29,6 @@ export class Http implements Plugin {
   public cookie?: Cookie;
   public session?: Session;
   private config: {
-    path?: string;
     method?: number;
     timeout?: number;
     functionName?: string;
@@ -49,6 +47,9 @@ export class Http implements Plugin {
     data.logger!.debug('%o', data);
 
     const config = deepMerge(data.config!.plugins![this.name || this.type], { config: this.config });
+
+    // 根据文件及文件夹名生成路径
+    config.path = '/' + data.name!.replace(/_/g, '/').replace(/\/index$/, '');
 
     data.logger!.debug('[Http] 组装完成 %o', config);
 
