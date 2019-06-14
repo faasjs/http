@@ -7,7 +7,7 @@ export interface HttpConfig {
   name?: string;
   config?: {
     path?: string;
-    method?: number;
+    method?: string;
     timeout?: number;
     functionName?: string;
     cookie?: CookieOptions;
