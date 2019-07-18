@@ -79,9 +79,15 @@ export class Http implements Plugin {
     data.logger.debug('[Http][Before] begin');
     data.logger.time('http');
 
+    this.params = {};
+
     if (data.event.headers && data.event.headers['Content-Type'] && data.event.headers['Content-Type'].includes('application/json')) {
       data.logger.debug('[Http] Parse body');
-      data.event.body = JSON.parse(data.event.body);
+      this.params = JSON.parse(data.event.body);
+    } else if (data.event.body) {
+      this.params = data.event.body;
+    } else if (data.event.queryString) {
+      this.params = data.event.queryString;
     }
 
     data.logger.debug('[Http] Parse cookie');
