@@ -25,6 +25,9 @@ export class Http implements Plugin {
     };
     body?: any;
   };
+  public headers?: {
+    [key: string]: string;
+  };
   public params: any;
   public cookie?: Cookie;
   public session?: Session;
@@ -66,7 +69,9 @@ export class Http implements Plugin {
 
   public async onMount (data: MountData, next: Next) {
     // 初始化配置项
-    this.config = deepMerge(this.config, data.config.plugins[this.name || this.type].config);
+    if (data.config.plugins[this.name || this.type]) {
+      this.config = deepMerge(this.config, data.config.plugins[this.name || this.type].config);
+    }
 
     // 初始化 Cookie
     this.cookie = new Cookie(this.config.cookie || {});
@@ -79,14 +84,19 @@ export class Http implements Plugin {
     data.logger.debug('[Http][Before] begin');
     data.logger.time('http');
 
+    this.headers = data.event.headers || {};
     this.params = {};
 
-    if (data.event.headers && data.event.headers['Content-Type'] && data.event.headers['Content-Type'].includes('application/json')) {
-      data.logger.debug('[Http] Parse body');
-      this.params = JSON.parse(data.event.body);
-    } else if (data.event.body) {
-      this.params = data.event.body;
+    if (data.event.body) {
+      if (data.event.headers && data.event.headers['content-type'] && data.event.headers['content-type'].includes('application/json')) {
+        data.logger.debug('[Http] Parse params from json body');
+        this.params = JSON.parse(data.event.body);
+      } else {
+        data.logger.debug('[Http] Parse params from raw body');
+        this.params = data.event.body;
+      }
     } else if (data.event.queryString) {
+      data.logger.debug('[Http] Parse params from queryString');
       this.params = data.event.queryString;
     }
 
