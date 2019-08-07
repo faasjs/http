@@ -201,6 +201,7 @@ export class Http implements Plugin {
    */
   public setStatusCode (code: number) {
     this.response!.statusCode = code;
+    return this;
   }
 
   /**
@@ -209,5 +210,6 @@ export class Http implements Plugin {
    */
   public setBody (body: string) {
     this.response!.body = body;
+    return this;
   }
 }
