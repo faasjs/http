@@ -115,6 +115,6 @@ export class Session {
       this.cacheContent![key as string] = value;
     }
     this.changed = true;
-    return this.cacheContent;
+    return this;
   }
 }

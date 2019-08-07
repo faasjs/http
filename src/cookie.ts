@@ -104,6 +104,6 @@ export class Cookie {
       'Set-Cookie': cookie
     };
 
-    return value;
+    return this;
   }
 }

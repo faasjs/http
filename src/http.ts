@@ -3,6 +3,19 @@ import deepMerge from '@faasjs/deep_merge';
 import { Cookie, CookieOptions } from './cookie';
 import { Session } from './session';
 
+export const ContentType: {
+  [key: string]: string;
+} = {
+  plain: 'text/plain',
+  html: 'text/html',
+  xml: 'application/xml',
+  csv: 'text/csv',
+  css: 'text/css',
+  javascript: 'application/javascript',
+  json: 'application/json',
+  jsonp: 'application/javascript'
+};
+
 export interface HttpConfig {
   name?: string;
   config?: {
@@ -15,16 +28,18 @@ export interface HttpConfig {
   [key: string]: any;
 }
 
+interface Response {
+  statusCode?: number;
+  headers: {
+    [key: string]: any;
+  };
+  body?: string;
+}
+
 export class Http implements Plugin {
   public readonly type: string;
   public name?: string
-  public response?: {
-    statusCode: number;
-    headers: {
-      [key: string]: string;
-    };
-    body?: any;
-  };
+  public response?: Response;
   public headers?: {
     [key: string]: string;
   };
@@ -86,6 +101,11 @@ export class Http implements Plugin {
 
     this.headers = data.event.headers || {};
     this.params = {};
+    this.response = {
+      statusCode: undefined,
+      headers: {},
+      body: undefined
+    };
 
     if (data.event.body) {
       if (data.event.headers && data.event.headers['content-type'] && data.event.headers['content-type'].includes('application/json')) {
@@ -116,35 +136,78 @@ export class Http implements Plugin {
     }
 
     data.logger.debug('[Http] Generate response');
-    // 处理结果并返回
-    if (typeof data.response === 'undefined' || data.response === null) {
-      // 没有结果或结果内容为空时，直接返回 201
-      data.response = {
-        statusCode: 201,
-      };
-    } else if (data.response instanceof Error) {
-      // 当结果是错误类型时
-      data.response = {
-        body: { error: { message: data.response.message } },
-        statusCode: 500,
-      };
-    } else if (!data.response.statusCode) {
-      data.response = {
-        body: { data: data.response },
-        statusCode: 200,
-      };
+    const response: Response = {
+      statusCode: undefined,
+      headers: {},
+      body: undefined
+    };
+    // 处理 body
+    if (data.response) {
+      if (data.response instanceof Error) {
+        // 当结果是错误类型时
+        response.body = JSON.stringify({ error: { message: data.response.message } });
+        response.statusCode = 500;
+      } else {
+        response.body = JSON.stringify({ data: data.response });
+      }
+    } else {
+      response.body = this.response.body;
     }
 
-    // 序列化 body
-    if (typeof data.response.body !== 'undefined' && data.response.body !== 'string') {
-      data.response.body = JSON.stringify(data.response.body);
+    // 处理 statusCode
+    if (!response.statusCode) {
+      response.statusCode = this.response.statusCode || (response.body ? 200 : 201);
     }
 
-    data.response.headers = Object.assign({
-      'Content-Type': 'application/json; charset=UTF-8',
+    // 处理 headers
+    response.headers = Object.assign({
+      'Content-Type': 'application/json; charset=utf-8',
       'X-Request-Id': (data.context ? data.context.request_id : new Date().getTime().toString())
-    }, this.cookie!.headers, data.response.headers || {});
+    }, this.cookie!.headers, this.response.headers);
+
+    /* eslint-disable require-atomic-updates */
+    data.response = response;
 
     data.logger.timeEnd('http', '[Http][After] end');
+  }
+
+  /**
+   * 设置 header
+   * @param key {string} key
+   * @param value {*} value
+   */
+  public setHeader (key: string, value: any) {
+    this.response!.headers[key as string] = value;
+    return this;
+  }
+
+  /**
+   * 设置 Content-Type
+   * @param type {string} 类型
+   * @param charset {string} 编码
+   */
+  public setContentType (type: string, charset: string = 'utf-8') {
+    if (ContentType[type as string]) {
+      this.setHeader('Content-Type', `${ContentType[type as string]}; charset=${charset}`);
+    } else {
+      this.setHeader('Content-Type', `${type}; charset=${charset}`);
+    }
+    return this;
+  }
+
+  /**
+   * 设置状态码
+   * @param code {number} 状态码
+   */
+  public setStatusCode (code: number) {
+    this.response!.statusCode = code;
+  }
+
+  /**
+   * 设置 body
+   * @param body {*} 内容
+   */
+  public setBody (body: string) {
+    this.response!.body = body;
   }
 }
