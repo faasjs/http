@@ -1,5 +1,5 @@
 import { Func } from '@faasjs/func';
-import { Http } from '../http';
+import { Http } from '..';
 
 describe('setStatusCode', function () {
   test('should work', async function () {

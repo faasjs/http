@@ -1,8 +1,8 @@
 import { Func } from '@faasjs/func';
-import { Http } from '../http';
+import { Http } from '../../index';
 
-describe('validator', function () {
-  describe('whitelist', function () {
+describe('validator/whitelist', function () {
+  describe('normal', function () {
     test('error', async function () {
       const http = new Http({
         validator: {
@@ -30,7 +30,7 @@ describe('validator', function () {
       expect(res2.body).toEqual('{"error":{"message":"Unpermitted params: key2, key3"}}');
     });
 
-    test('error', async function () {
+    test('ignore', async function () {
       const http = new Http({
         validator: {
           whitelist: 'ignore',
@@ -55,78 +55,19 @@ describe('validator', function () {
       expect(res2.body).toEqual('{"data":{"key":1}}');
     });
   });
-  describe('required', function () {
-    test('boolean', async function () {
+
+  describe('array', function () {
+    test('error', async function () {
       const http = new Http({
         validator: {
           rules: {
             key: {
-              required: true
-            }
-          }
-        }
-      });
-      const handler = new Func({
-        plugins: [http],
-        handler () { }
-      }).export().handler;
-
-      const res = await handler({});
-
-      expect(res.statusCode).toEqual(500);
-      expect(res.body).toEqual('{"error":{"message":"key is required."}}');
-
-      const res2 = await handler({
-        headers: { 'content-type': 'application/json' },
-        body: '{"key":1}'
-      });
-
-      expect(res2.statusCode).toEqual(201);
-    });
-  });
-
-  describe('type', function () {
-    test('should work', async function () {
-      const http = new Http({
-        validator: {
-          rules: {
-            key: {
-              type: 'number'
-            }
-          }
-        }
-      });
-      const handler = new Func({
-        plugins: [http],
-        handler () { }
-      }).export().handler;
-
-      const res = await handler({});
-
-      expect(res.statusCode).toEqual(201);
-
-      const res2 = await handler({
-        headers: { 'content-type': 'application/json' },
-        body: '{"key":1}'
-      });
-
-      expect(res2.statusCode).toEqual(201);
-
-      const res3 = await handler({
-        headers: { 'content-type': 'application/json' },
-        body: '{"key":"1"}'
-      });
-
-      expect(res3.statusCode).toEqual(500);
-      expect(res3.body).toEqual('{"error":{"message":"key must be a number."}}');
-    });
-
-    test.each([['string', '"string"'], ['boolean', 'false']])('be %p', async function (type: 'string' | 'boolean', value) {
-      const http = new Http({
-        validator: {
-          rules: {
-            key: {
-              type
+              config: {
+                whitelist: 'error',
+                rules: {
+                  sub: {}
+                }
+              }
             }
           }
         }
@@ -138,28 +79,64 @@ describe('validator', function () {
 
       const res = await handler({
         headers: { 'content-type': 'application/json' },
-        body: `{"key":${value}}`
+        body: '{"key":[{"sub":1}]}'
       });
 
       expect(res.statusCode).toEqual(201);
 
       const res2 = await handler({
         headers: { 'content-type': 'application/json' },
-        body: '{"key":1}'
+        body: '{"key":[{"key1":1,"key2":2}]}'
       });
 
       expect(res2.statusCode).toEqual(500);
-      expect(res2.body).toEqual(`{"error":{"message":"key must be a ${type}."}}`);
+      expect(res2.body).toEqual('{"error":{"message":"Unpermitted params: key.key1, key.key2"}}');
     });
-  });
 
-  describe('in', function () {
-    test('should work', async function () {
+    test('ignore', async function () {
       const http = new Http({
         validator: {
           rules: {
             key: {
-              in: [1]
+              config: {
+                whitelist: 'ignore',
+                rules: {
+                  sub: {}
+                }
+              }
+            }
+          }
+        }
+      });
+      const handler = new Func({
+        plugins: [http],
+        handler () {
+          return http.params.key;
+        }
+      }).export().handler;
+
+      const res2 = await handler({
+        headers: { 'content-type': 'application/json' },
+        body: '{"key":[{"sub":1,"key":2}]}'
+      });
+
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.body).toEqual('{"data":[{"sub":1}]}');
+    });
+  });
+
+  describe('object', function () {
+    test('error', async function () {
+      const http = new Http({
+        validator: {
+          rules: {
+            key: {
+              config: {
+                whitelist: 'error',
+                rules: {
+                  sub: {}
+                }
+              }
             }
           }
         }
@@ -169,24 +146,51 @@ describe('validator', function () {
         handler () { }
       }).export().handler;
 
-      const res = await handler({});
+      const res = await handler({
+        headers: { 'content-type': 'application/json' },
+        body: '{"key":{"sub":1}}'
+      });
 
       expect(res.statusCode).toEqual(201);
 
       const res2 = await handler({
         headers: { 'content-type': 'application/json' },
-        body: '{"key":1}'
+        body: '{"key":{"key1":1,"key2":2}}'
       });
 
-      expect(res2.statusCode).toEqual(201);
+      expect(res2.statusCode).toEqual(500);
+      expect(res2.body).toEqual('{"error":{"message":"Unpermitted params: key.key1, key.key2"}}');
+    });
 
-      const res3 = await handler({
+    test('ignore', async function () {
+      const http = new Http({
+        validator: {
+          rules: {
+            key: {
+              config: {
+                whitelist: 'ignore',
+                rules: {
+                  sub: {}
+                }
+              }
+            }
+          }
+        }
+      });
+      const handler = new Func({
+        plugins: [http],
+        handler () {
+          return http.params.key;
+        }
+      }).export().handler;
+
+      const res2 = await handler({
         headers: { 'content-type': 'application/json' },
-        body: '{"key":2}'
+        body: '{"key":{"sub":1,"key":2}}'
       });
 
-      expect(res3.statusCode).toEqual(500);
-      expect(res3.body).toEqual('{"error":{"message":"key must be in 1."}}');
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.body).toEqual('{"data":{"sub":1}}');
     });
   });
 });

@@ -1,5 +1,5 @@
 import { Func } from '@faasjs/func';
-import { Http, ContentType } from '../http';
+import { Http, ContentType } from '..';
 
 describe('setContentType', function () {
   test.each(Object.keys(ContentType))('type is %s', async function (type) {

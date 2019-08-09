@@ -1,5 +1,5 @@
 import { Func } from '@faasjs/func';
-import { Http } from '../http';
+import { Http } from '..';
 
 describe('setHeader', function () {
   test('should work', async function () {

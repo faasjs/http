@@ -1,5 +1,5 @@
 import { Func } from '@faasjs/func';
-import { Http } from '../http';
+import { Http } from '../index';
 
 describe('http', function () {
   test('should work', async function () {

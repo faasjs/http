@@ -1,5 +1,5 @@
 import { Func, InvokeData } from '@faasjs/func';
-import { Http } from '../http';
+import { Http } from '../index';
 import { Session } from '../session';
 
 describe('session', function () {
