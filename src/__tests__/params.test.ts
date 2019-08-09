@@ -4,14 +4,12 @@ import { Http } from '../http';
 describe('params', function () {
   test('blank', async function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         return http.params;
       }
-    });
-
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({});
 
@@ -21,14 +19,12 @@ describe('params', function () {
 
   test('raw', async function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         return http.params;
       }
-    });
-
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({
       body: 'raw'
@@ -40,14 +36,12 @@ describe('params', function () {
 
   test('queryString', async function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         return http.params;
       }
-    });
-
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({
       queryString: {
@@ -61,14 +55,12 @@ describe('params', function () {
 
   test('json', async function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         return http.params;
       }
-    });
-
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({
       headers: {

@@ -4,19 +4,12 @@ import { Http, ContentType } from '../http';
 describe('setContentType', function () {
   test.each(Object.keys(ContentType))('type is %s', async function (type) {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         http.setContentType(type);
       }
-    });
-
-    func.config = {
-      plugins: {
-        http: {}
-      }
-    };
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({});
 
@@ -26,19 +19,12 @@ describe('setContentType', function () {
 
   test('set charset', async function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         http.setContentType('type', 'utf-16');
       }
-    });
-
-    func.config = {
-      plugins: {
-        http: {}
-      }
-    };
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({});
 

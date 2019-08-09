@@ -2,6 +2,59 @@ import { Func } from '@faasjs/func';
 import { Http } from '../http';
 
 describe('validator', function () {
+  describe('whitelist', function () {
+    test('error', async function () {
+      const http = new Http({
+        validator: {
+          whitelist: 'error',
+          rules: {
+            key: {}
+          }
+        }
+      });
+      const handler = new Func({
+        plugins: [http],
+        handler () { }
+      }).export().handler;
+
+      const res = await handler({});
+
+      expect(res.statusCode).toEqual(201);
+
+      const res2 = await handler({
+        headers: { 'content-type': 'application/json' },
+        body: '{"key":1,"key2":2,"key3":3}'
+      });
+
+      expect(res2.statusCode).toEqual(500);
+      expect(res2.body).toEqual('{"error":{"message":"Unpermitted params: key2, key3"}}');
+    });
+
+    test('error', async function () {
+      const http = new Http({
+        validator: {
+          whitelist: 'ignore',
+          rules: {
+            key: {}
+          }
+        }
+      });
+      const handler = new Func({
+        plugins: [http],
+        handler () {
+          return http.params;
+        }
+      }).export().handler;
+
+      const res2 = await handler({
+        headers: { 'content-type': 'application/json' },
+        body: '{"key":1,"key2":2,"key3":3}'
+      });
+
+      expect(res2.statusCode).toEqual(200);
+      expect(res2.body).toEqual('{"data":{"key":1}}');
+    });
+  });
   describe('required', function () {
     test('boolean', async function () {
       const http = new Http({
@@ -13,12 +66,10 @@ describe('validator', function () {
           }
         }
       });
-      const func = new Func({
+      const handler = new Func({
         plugins: [http],
         handler () { }
-      });
-
-      const handler = func.export().handler;
+      }).export().handler;
 
       const res = await handler({});
 
@@ -45,12 +96,10 @@ describe('validator', function () {
           }
         }
       });
-      const func = new Func({
+      const handler = new Func({
         plugins: [http],
         handler () { }
-      });
-
-      const handler = func.export().handler;
+      }).export().handler;
 
       const res = await handler({});
 
@@ -82,12 +131,10 @@ describe('validator', function () {
           }
         }
       });
-      const func = new Func({
+      const handler = new Func({
         plugins: [http],
         handler () { }
-      });
-
-      const handler = func.export().handler;
+      }).export().handler;
 
       const res = await handler({
         headers: { 'content-type': 'application/json' },
@@ -117,12 +164,10 @@ describe('validator', function () {
           }
         }
       });
-      const func = new Func({
+      const handler = new Func({
         plugins: [http],
         handler () { }
-      });
-
-      const handler = func.export().handler;
+      }).export().handler;
 
       const res = await handler({});
 

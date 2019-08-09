@@ -4,14 +4,12 @@ import { Http } from '../http';
 describe('params', function () {
   test('blank', async function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         return http.headers;
       }
-    });
-
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({});
 
@@ -21,14 +19,12 @@ describe('params', function () {
 
   test('should work', async function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         return http.headers;
       }
-    });
-
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({
       headers: {

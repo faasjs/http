@@ -4,18 +4,12 @@ import { Http } from '../http';
 describe('cookie', function () {
   describe('read', function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler (data: InvokeData) {
         return http.cookie.read(data.event.key);
       }
-    });
-    func.config = {
-      plugins: {
-        http: {}
-      }
-    };
-    const handler = func.export().handler;
+    }).export().handler;
 
     test('should work', async function () {
       let res = await handler({

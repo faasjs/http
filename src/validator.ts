@@ -1,4 +1,5 @@
 export interface ValidatorConfig {
+  whitelist?: 'error' | 'ignore';
   rules: {
     [key: string]: {
       type?: 'string' | 'number' | 'boolean' | 'object';
@@ -18,6 +19,22 @@ export class Validator {
   public valid (params: {
     [key: string]: any;
   }) {
+    if (this.config.whitelist) {
+      const paramsKeys = Object.keys(params);
+      const rulesKeys = Object.keys(this.config.rules);
+      const diff = paramsKeys.filter(k => !rulesKeys.includes(k));
+      if (diff.length) {
+        switch (this.config.whitelist) {
+          case 'error':
+            throw Error(`Unpermitted params: ${diff.join(', ')}`);
+          case 'ignore':
+            for (const key of diff) {
+              delete params[key as string];
+            }
+            break;
+        }
+      }
+    }
     for (const key in this.config.rules) {
       const rule = this.config.rules[key as string];
       const value = params[key as string];

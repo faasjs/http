@@ -4,19 +4,12 @@ import { Http } from '../http';
 describe('setStatusCode', function () {
   test('should work', async function () {
     const http = new Http();
-    const func = new Func({
+    const handler = new Func({
       plugins: [http],
       handler () {
         http.setStatusCode(404);
       }
-    });
-
-    func.config = {
-      plugins: {
-        http: {}
-      }
-    };
-    const handler = func.export().handler;
+    }).export().handler;
 
     const res = await handler({});
 
