@@ -1,5 +1,4 @@
 import { Session, SessionOption } from './session';
-import { InvokeData } from '@faasjs/func';
 import deepMerge from '@faasjs/deep_merge';
 
 export interface CookieOptions {
@@ -13,54 +12,56 @@ export interface CookieOptions {
 }
 
 export class Cookie {
+  public session: Session;
+  public content: {
+    [key: string]: any;
+  };
+  public headers?: any;
   public readonly config: {
     domain?: string;
     path: string;
     expires: number;
     secure: boolean;
     httpOnly: boolean;
-    session?: SessionOption;
+    session: SessionOption;
   };
-  public session?: Session;
-  public headers?: any;
-  private cacheContent?: any;
 
   constructor (config: CookieOptions) {
     this.config = deepMerge({
       path: '/',
       expires: 31536000,
       secure: true,
-      httpOnly: true
+      httpOnly: true,
+      session: {}
     }, config);
 
-    if (this.config.session) {
-      this.session = new Session(this.config.session);
-    }
+    this.session = new Session(this, this.config.session);
+
+    this.content = Object.create(null);
   }
 
-  public invoke (data: InvokeData) {
-    if (data.event.headers && data.event.headers.cookie) {
-      this.cacheContent = data.event.headers.cookie;
-    } else {
-      this.cacheContent = '';
+  public invoke (cookie: string | undefined) {
+    this.content = Object.create(null);
+
+    // 解析 cookie
+    if (cookie) {
+      cookie.split(';').map((x: string) => {
+        x = x.trim();
+        const k = x.match(/([^=]+)/);
+        if (k !== null) {
+          this.content[k[0] as string] = decodeURIComponent(x.replace(`${k[0]}=`, '').replace(/;$/, ''));
+        }
+      });
     }
 
     this.headers = null;
     // 预读取 session
-    if (this.session && this.config.session!.key) {
-      this.session.invoke(this.read(this.config.session!.key));
-    }
+    this.session.invoke(this.read(this.session.config.key));
     return this;
   }
 
   public read (key: string) {
-    if (!this.cacheContent) {
-      return undefined;
-    }
-
-    const v = this.cacheContent.match('(^|;)\\s*' + key + '\\s*=\\s*([^;]+)');
-
-    return v ? decodeURIComponent(v.pop()) : undefined;
+    return this.content[key as string];
   }
 
   public write (key: string, value: any, opts?: {
@@ -76,8 +77,10 @@ export class Cookie {
     if (value === null || typeof value === 'undefined') {
       opts.expires = 'Thu, 01 Jan 1970 00:00:01 GMT';
       cookie = `${key}=;`;
+      delete this.content[key as string];
     } else {
       cookie = `${key}=${encodeURIComponent(value)};`;
+      this.content[key as string] = value;
     }
 
     if (typeof opts.expires === 'number') {

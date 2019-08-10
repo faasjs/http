@@ -27,7 +27,11 @@ export interface HttpConfig {
     cookie?: CookieOptions;
     [key: string]: any;
   };
-  validator?: ValidatorConfig;
+  validator?: {
+    params?: ValidatorConfig;
+    cookie?: ValidatorConfig;
+    session?: ValidatorConfig;
+  };
   [key: string]: any;
 }
 
@@ -55,7 +59,11 @@ export class Http implements Plugin {
     cookie?: CookieOptions;
     [key: string]: any;
   };
-  private validatorConfig?: ValidatorConfig;
+  private validatorConfig?: {
+    params?: ValidatorConfig;
+    cookie?: ValidatorConfig;
+    session?: ValidatorConfig;
+  };
   private response?: Response;
   private validator?: Validator;
   private logger: Logger;
@@ -66,6 +74,9 @@ export class Http implements Plugin {
    * @param config.name {string} 配置名
    * @param config.config {object} 网关配置
    * @param config.validator {object} 入参校验配置
+   * @param config.validator.params {object} params 校验配置
+   * @param config.validator.cookie {object} cookie 校验配置
+   * @param config.validator.session {object} session 校验配置
    */
   constructor (config: HttpConfig = Object.create(null)) {
     this.logger = new Logger('Http');
@@ -100,17 +111,17 @@ export class Http implements Plugin {
   }
 
   public async onMount (data: MountData, next: Next) {
-    this.logger.debug('[Http][onMount] merge config');
+    this.logger.debug('[onMount] merge config');
     if (data.config.plugins[this.name || this.type]) {
       this.config = deepMerge(this.config, data.config.plugins[this.name || this.type].config);
     }
 
-    this.logger.debug('[Http][onMount] prepare cookie & session');
+    this.logger.debug('[onMount] prepare cookie & session');
     this.cookie = new Cookie(this.config.cookie || {});
     this.session = this.cookie.session;
 
     if (this.validatorConfig) {
-      this.logger.debug('[Http][onMount] prepare validator');
+      this.logger.debug('[onMount] prepare validator');
       this.validator = new Validator(this.validatorConfig);
     }
 
@@ -118,7 +129,7 @@ export class Http implements Plugin {
   }
 
   public async onInvoke (data: InvokeData, next: Next) {
-    this.logger.debug('[Http][Before] begin');
+    this.logger.debug('[onInvoke] Parse & valid');
     this.logger.time('http');
 
     this.headers = data.event.headers || {};
@@ -131,22 +142,32 @@ export class Http implements Plugin {
 
     if (data.event.body) {
       if (data.event.headers && data.event.headers['content-type'] && data.event.headers['content-type'].includes('application/json')) {
-        this.logger.debug('[Http] Parse params from json body');
+        this.logger.debug('[onInvoke] Parse params from json body');
         this.params = JSON.parse(data.event.body);
       } else {
-        this.logger.debug('[Http] Parse params from raw body');
+        this.logger.debug('[onInvoke] Parse params from raw body');
         this.params = data.event.body;
       }
     } else if (data.event.queryString) {
-      this.logger.debug('[Http] Parse params from queryString');
+      this.logger.debug('[onInvoke] Parse params from queryString');
       this.params = data.event.queryString;
     }
 
+    this.logger.debug('[onInvoke] Parse cookie');
+    this.cookie!.invoke(this.headers!['cookie']);
+    this.logger.debug('[onInvoke] Cookie: %o', this.cookie!.content);
+    this.logger.debug('[onInvoke] Session: %o', this.session!.content);
+
     if (this.validator) {
-      this.logger.debug('[Http] Valid params');
+      this.logger.debug('[onInvoke] Valid request');
       try {
-        this.validator.valid(this.params);
+        this.validator.valid({
+          params: this.params,
+          cookie: this.cookie,
+          session: this.session
+        });
       } catch (error) {
+        this.logger.error(error);
         data.response = {
           statusCode: 500,
           headers: {
@@ -163,26 +184,23 @@ export class Http implements Plugin {
       }
     }
 
-    this.logger.debug('[Http] Parse cookie');
-    this.cookie!.invoke(data);
-
-    this.logger.timeEnd('http', '[Http][Before] end');
+    this.logger.timeEnd('http', '[onInvoke] Parse & valid done');
 
     await next();
 
-    this.logger.debug('[Http][After] begin');
+    this.logger.debug('[onInvoke] Generate response');
     this.logger.time('http');
 
-    // 检查 session 是否有变动
-    if (this.session && this.session.changed) {
-      this.cookie!.write(this.session.config.key, this.session!.encode(this.session.cacheContent));
+    // update seesion
+    if (this.session) {
+      this.session.update();
     }
 
-    this.logger.debug('[Http] Generate response');
     // 处理 body
     if (data.response) {
       if (data.response instanceof Error) {
         // 当结果是错误类型时
+        this.logger.error(data.response);
         this.response.body = JSON.stringify({ error: { message: data.response.message } });
         this.response.statusCode = 500;
       } else {
@@ -204,7 +222,7 @@ export class Http implements Plugin {
     /* eslint-disable-next-line require-atomic-updates */
     data.response = this.response;
 
-    this.logger.timeEnd('http', '[Http][After] end');
+    this.logger.timeEnd('http', '[onInvoke] done');
   }
 
   /**

@@ -30,7 +30,7 @@ describe('session', function () {
     test('return value', async function () {
       const res = await handler({
         headers: {
-          cookie: 'key=YUwxU1dBMDc5anlDemY3SHhPSDhHUT09LS1BdGJTSzdHSzhsRGJCcDlMZ05lK0ZnPT0=--6a5edb5edffc49259127b2268a82061f8937b742f541df6ccb283b5ca0e312d6;'
+          cookie: 'key=YUwxU1dBMDc5anlDemY3SHhPSDhHUT09LS1BdGJTSzdHSzhsRGJCcDlMZ05lK0ZnPT0=--6a5edb5edffc49259127b2268a82061f8937b742f541df6ccb283b5ca0e312d6; '
         },
         key: 'key'
       });
@@ -41,7 +41,7 @@ describe('session', function () {
     test('no value', async function () {
       const res = await handler({
         headers: {
-          cookie: 'key=YUwxU1dBMDc5anlDemY3SHhPSDhHUT09LS1BdGJTSzdHSzhsRGJCcDlMZ05lK0ZnPT0=--6a5edb5edffc49259127b2268a82061f8937b742f541df6ccb283b5ca0e312d6;'
+          cookie: 'key=YUwxU1dBMDc5anlDemY3SHhPSDhHUT09LS1BdGJTSzdHSzhsRGJCcDlMZ05lK0ZnPT0=--6a5edb5edffc49259127b2268a82061f8937b742f541df6ccb283b5ca0e312d6; '
         },
         key: 'null'
       });
@@ -77,7 +77,7 @@ describe('session', function () {
     const func = new Func({
       plugins: [http],
       handler (data: InvokeData) {
-        return http.session.write(data.event.key, data.event.value);
+        http.session.write(data.event.key, data.event.value);
       }
     });
     func.config = {
@@ -95,7 +95,7 @@ describe('session', function () {
       }
     };
     const handler = func.export().handler;
-    const session = new Session({
+    const session = new Session(http.cookie, {
       key: 'key',
       secret: 'secret'
     });

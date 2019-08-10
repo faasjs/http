@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { Cookie } from './cookie';
 
 export interface SessionOption {
   key: string;
@@ -12,6 +13,10 @@ export interface SessionOption {
 }
 
 export class Session {
+  public content: {
+    [key: string]: any;
+  };
+
   public readonly config: {
     key: string;
     secret: string;
@@ -22,14 +27,14 @@ export class Session {
     digest: string;
     cipherName: string;
   };
-  public secret: Buffer;
-  public signedSecret: Buffer;
-  public cacheContent?: {
-    [key: string]: any;
-  };
-  public changed?: boolean;
+  private secret: Buffer;
+  private signedSecret: Buffer;
+  private cookie: Cookie;
+  private changed?: boolean;
 
-  constructor (config: SessionOption) {
+  constructor (cookie: Cookie, config: SessionOption) {
+    this.cookie = cookie;
+
     this.config = Object.assign({
       key: 'key',
       secret: crypto.randomBytes(128).toString('hex'),
@@ -44,14 +49,16 @@ export class Session {
     this.secret = crypto.pbkdf2Sync(this.config.secret, this.config.salt!, this.config.iterations, this.config.keylen / 2, this.config.digest!);
 
     this.signedSecret = crypto.pbkdf2Sync(this.config.secret, this.config.signedSalt, this.config.iterations!, this.config.keylen, this.config.digest);
+
+    this.content = Object.create(null);
   }
 
   public invoke (cookie?: string) {
     try {
-      this.cacheContent = cookie ? this.decode(cookie) : Object.create(null);
+      this.content = cookie ? this.decode(cookie) : Object.create(null);
     } catch (error) {
       console.error(error);
-      this.cacheContent = Object.create(null);
+      this.content = Object.create(null);
     }
     this.changed = false;
   }
@@ -105,16 +112,23 @@ export class Session {
   }
 
   public read (key: string) {
-    return this.cacheContent![key as string];
+    return this.content[key as string];
   }
 
   public write (key: string, value?: any) {
     if (value === null || typeof value === 'undefined') {
-      delete this.cacheContent![key as string];
+      delete this.content[key as string];
     } else {
-      this.cacheContent![key as string] = value;
+      this.content[key as string] = value;
     }
     this.changed = true;
+    return this;
+  }
+
+  public update () {
+    if (this.changed) {
+      this.cookie.write(this.config.key, this.encode(JSON.stringify(this.content)));
+    }
     return this;
   }
 }

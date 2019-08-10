@@ -22,6 +22,9 @@
 | config.name | <code>string</code> | 配置名 |
 | config.config | <code>object</code> | 网关配置 |
 | config.validator | <code>object</code> | 入参校验配置 |
+| config.validator.params | <code>object</code> | params 校验配置 |
+| config.validator.cookie | <code>object</code> | cookie 校验配置 |
+| config.validator.session | <code>object</code> | session 校验配置 |
 
 <a name="Http+setHeader"></a>
 
