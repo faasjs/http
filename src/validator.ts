@@ -13,6 +13,32 @@ export interface ValidatorConfig {
       config?: Partial<ValidatorConfig>;
     };
   };
+  onError?: (type: string, key: string | string[], value?: any) => {
+    statusCode?: number;
+    headers?: {
+      [key: string]: any;
+    };
+    message: any;
+  } | void;
+}
+
+class ValidError extends Error {
+  public statusCode: number;
+  public headers: {
+    [key: string]: any;
+  }
+
+  constructor ({ statusCode, headers, message }: {
+    statusCode?: number;
+    headers?: {
+      [key: string]: any;
+    };
+    message: string;
+  }) {
+    super(message);
+    this.statusCode = statusCode || 500;
+    this.headers = headers || Object.create(null);
+  }
 }
 
 export class Validator {
@@ -84,14 +110,20 @@ export class Validator {
       const rulesKeys = Object.keys(config.rules);
       const diff = paramsKeys.filter(k => !rulesKeys.includes(k));
       if (diff.length) {
-        switch (config.whitelist) {
-          case 'error':
-            throw Error(`[${type}] Unpermitted keys: ${diff.map(k => `${baseKey}${k}`).join(', ')}`);
-          case 'ignore':
-            for (const key of diff) {
-              delete params[key as string];
+        if (config.whitelist === 'error') {
+          const diffKeys = diff.map(k => `${baseKey}${k}`);
+          const error = Error(`[${type}] Unpermitted keys: ${diffKeys.join(', ')}`);
+          if (config.onError) {
+            const res = config.onError(`${type}.whitelist`, baseKey, diffKeys);
+            if (res) {
+              throw new ValidError(res);
             }
-            break;
+          }
+          throw error;
+        } else if (config.whitelist === 'ignore') {
+          for (const key of diff) {
+            delete params[key as string];
+          }
         }
       }
     }
@@ -112,7 +144,14 @@ export class Validator {
       // required
       if (rule.required === true) {
         if (typeof value === 'undefined' || value === null) {
-          throw Error(`[${type}] ${baseKey}${key} is required.`);
+          const error = Error(`[${type}] ${baseKey}${key} is required.`);
+          if (config.onError) {
+            const res = config.onError(`${type}.rule.required`, `${baseKey}${key}`, value);
+            if (res) {
+              throw new ValidError(res);
+            }
+          }
+          throw error;
         }
       }
 
@@ -122,29 +161,42 @@ export class Validator {
           if (type === 'cookie') {
             this.logger.warn('Cookie not support type rule');
           } else {
+            let typed = true;
             switch (rule.type) {
               case 'array':
-                if (!Array.isArray(value)) {
-                  throw Error(`[${type}] ${baseKey}${key} must be a ${rule.type}.`);
-                }
+                typed = Array.isArray(value);
                 break;
               case 'object':
-                if (Object.prototype.toString.call(value) !== '[object Object]') {
-                  throw Error(`[${type}] ${baseKey}${key} must be a ${rule.type}.`);
-                }
+                typed = Object.prototype.toString.call(value) === '[object Object]';
                 break;
               default:
-                if (typeof value !== rule.type) {
-                  throw Error(`[${type}] ${baseKey}${key} must be a ${rule.type}.`);
-                }
+                typed = typeof value === rule.type;
                 break;
+            }
+
+            if (!typed) {
+              const error = Error(`[${type}] ${baseKey}${key} must be a ${rule.type}.`);
+              if (config.onError) {
+                const res = config.onError(`${type}.rule.type`, `${baseKey}${key}`, value);
+                if (res) {
+                  throw new ValidError(res);
+                }
+              }
+              throw error;
             }
           }
         }
 
         // in
         if (rule.in && !rule.in.includes(value)) {
-          throw Error(`[${type}] ${baseKey}${key} must be in ${rule.in.join(', ')}.`);
+          const error = Error(`[${type}] ${baseKey}${key} must be in ${rule.in.join(', ')}.`);
+          if (config.onError) {
+            const res = config.onError(`${type}.rule.in`, `${baseKey}${key}`, value);
+            if (res) {
+              throw new ValidError(res);
+            }
+          }
+          throw error;
         }
 
         // nest config

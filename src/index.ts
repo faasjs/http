@@ -75,8 +75,17 @@ export class Http implements Plugin {
    * @param config.config {object} 网关配置
    * @param config.validator {object} 入参校验配置
    * @param config.validator.params {object} params 校验配置
+   * @param config.validator.params.whitelist {string} 白名单配置
+   * @param config.validator.params.onError {function} 自定义报错
+   * @param config.validator.params.rules {object} 参数校验规则
    * @param config.validator.cookie {object} cookie 校验配置
+   * @param config.validator.cookie.whitelist {string} 白名单配置
+   * @param config.validator.cookie.onError {function} 自定义报错
+   * @param config.validator.cookie.rules {object} 参数校验规则
    * @param config.validator.session {object} session 校验配置
+   * @param config.validator.session.whitelist {string} 白名单配置
+   * @param config.validator.session.onError {function} 自定义报错
+   * @param config.validator.session.rules {object} 参数校验规则
    */
   constructor (config: HttpConfig = Object.create(null)) {
     this.logger = new Logger('Http');
@@ -169,11 +178,11 @@ export class Http implements Plugin {
       } catch (error) {
         this.logger.error(error);
         data.response = {
-          statusCode: 500,
-          headers: {
+          statusCode: error.statusCode || 500,
+          headers: Object.assign({
             'Content-Type': 'application/json; charset=utf-8',
             'X-Request-Id': (data.context ? data.context.request_id : new Date().getTime().toString())
-          },
+          }, error.headers || {}),
           body: JSON.stringify({
             error: {
               message: error.message

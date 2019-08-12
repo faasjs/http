@@ -59,6 +59,100 @@ describe('validator/whitelist', function () {
         expect(res2.statusCode).toEqual(200);
         expect(res2.body).toEqual('{"data":{"key":1}}');
       });
+
+      describe('onError', function () {
+        test('no return', async function () {
+          const http = new Http({
+            validator: {
+              params: {
+                whitelist: 'error',
+                rules: {
+                  key: {}
+                },
+                onError: function () {
+                }
+              }
+            }
+          });
+          const handler = new Func({
+            plugins: [http],
+            handler () { }
+          }).export().handler;
+
+          const res = await handler({
+            headers: { 'content-type': 'application/json' },
+            body: '{"key1":1,"key2":2}'
+          });
+
+          expect(res.statusCode).toEqual(500);
+          expect(res.body).toEqual('{"error":{"message":"[params] Unpermitted keys: key1, key2"}}');
+        });
+
+        test('return message', async function () {
+          const http = new Http({
+            validator: {
+              params: {
+                whitelist: 'error',
+                rules: {
+                  key: {}
+                },
+                onError: function (type, key, value) {
+                  return {
+                    message: `${type} ${key} ${value}`
+                  };
+                }
+              }
+            }
+          });
+          const handler = new Func({
+            plugins: [http],
+            handler () { }
+          }).export().handler;
+
+          const res = await handler({
+            headers: { 'content-type': 'application/json' },
+            body: '{"key1":1,"key2":2}'
+          });
+
+          expect(res.statusCode).toEqual(500);
+          expect(res.body).toEqual('{"error":{"message":"params.whitelist  key1,key2"}}');
+        });
+
+        test('return all', async function () {
+          const http = new Http({
+            validator: {
+              params: {
+                whitelist: 'error',
+                rules: {
+                  key: {}
+                },
+                onError: function (type, key, value) {
+                  return {
+                    statusCode: 401,
+                    headers: {
+                      key: 'value'
+                    },
+                    message: `${type} ${key} ${value}`
+                  };
+                }
+              }
+            }
+          });
+          const handler = new Func({
+            plugins: [http],
+            handler () { }
+          }).export().handler;
+
+          const res = await handler({
+            headers: { 'content-type': 'application/json' },
+            body: '{"key1":1,"key2":2}'
+          });
+
+          expect(res.statusCode).toEqual(401);
+          expect(res.headers.key).toEqual('value');
+          expect(res.body).toEqual('{"error":{"message":"params.whitelist  key1,key2"}}');
+        });
+      });
     });
 
     describe('array', function () {
