@@ -107,7 +107,7 @@ describe('session', function () {
         headers: {}
       });
 
-      expect(session.decode(res.headers['Set-Cookie'].match('(^|;)\\s*key\\s*=\\s*([^;]+)')[2])).toEqual({ key: 'value' });
+      expect(session.decode(res.headers['Set-Cookie'][0].match('(^|;)\\s*key\\s*=\\s*([^;]+)')[2])).toEqual({ key: 'value' });
     });
 
     test('delete', async function () {
@@ -119,7 +119,7 @@ describe('session', function () {
         }
       });
 
-      expect(session.decode(res.headers['Set-Cookie'].match('(^|;)\\s*key\\s*=\\s*([^;]+)')[2])).toEqual({});
+      expect(session.decode(res.headers['Set-Cookie'][0].match('(^|;)\\s*key\\s*=\\s*([^;]+)')[2])).toEqual({});
     });
 
     test('multi change', async function () {
@@ -153,7 +153,7 @@ describe('session', function () {
         value: null
       });
 
-      expect(session.decode(res.headers['Set-Cookie'].match('(^|;)\\s*key\\s*=\\s*([^;]+)')[2])).toEqual({
+      expect(session.decode(res.headers['Set-Cookie'][0].match('(^|;)\\s*key\\s*=\\s*([^;]+)')[2])).toEqual({
         a: 2,
         b: 1
       });

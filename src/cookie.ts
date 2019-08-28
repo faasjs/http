@@ -16,7 +16,6 @@ export class Cookie {
   public content: {
     [key: string]: any;
   };
-  public headers?: any;
   public readonly config: {
     domain?: string;
     path: string;
@@ -24,6 +23,9 @@ export class Cookie {
     secure: boolean;
     httpOnly: boolean;
     session: SessionOption;
+  };
+  private setCookie: {
+    [key: string]: string;
   };
 
   constructor (config: CookieOptions) {
@@ -38,6 +40,8 @@ export class Cookie {
     this.session = new Session(this, this.config.session);
 
     this.content = Object.create(null);
+
+    this.setCookie = Object.create(null);
   }
 
   public invoke (cookie: string | undefined) {
@@ -54,7 +58,7 @@ export class Cookie {
       });
     }
 
-    this.headers = null;
+    this.setCookie = Object.create(null);
     // 预读取 session
     this.session.invoke(this.read(this.session.config.key));
     return this;
@@ -103,10 +107,18 @@ export class Cookie {
       cookie += 'HttpOnly;';
     }
 
-    this.headers = {
-      'Set-Cookie': cookie
-    };
+    this.setCookie[key as string] = cookie;
 
     return this;
+  }
+
+  public headers () {
+    if (!Object.keys(this.setCookie).length) {
+      return {};
+    } else {
+      return {
+        'Set-Cookie': Object.values(this.setCookie)
+      };
+    }
   }
 }

@@ -46,12 +46,12 @@ interface Response {
 export class Http implements Plugin {
   public readonly type: string;
   public name?: string
-  public headers?: {
+  public headers: {
     [key: string]: string;
   };
   public params: any;
-  public cookie?: Cookie;
-  public session?: Session;
+  public cookie: Cookie;
+  public session: Session;
   private config: {
     method?: number;
     timeout?: number;
@@ -95,6 +95,9 @@ export class Http implements Plugin {
     if (config.validator) {
       this.validatorConfig = config.validator;
     }
+    this.headers = Object.create(null);
+    this.cookie = new Cookie(this.config.cookie || {});
+    this.session = this.cookie.session;
   }
 
   public async onDeploy (data: DeployData, next: Next) {
@@ -141,11 +144,11 @@ export class Http implements Plugin {
     this.logger.debug('[onInvoke] Parse & valid');
     this.logger.time('http');
 
-    this.headers = data.event.headers || {};
-    this.params = {};
+    this.headers = data.event.headers || Object.create(null);
+    this.params = Object.create(null);
     this.response = {
       statusCode: undefined,
-      headers: {},
+      headers: Object.create(null),
       body: undefined
     };
 
@@ -163,9 +166,9 @@ export class Http implements Plugin {
     }
 
     this.logger.debug('[onInvoke] Parse cookie');
-    this.cookie!.invoke(this.headers!['cookie']);
-    this.logger.debug('[onInvoke] Cookie: %o', this.cookie!.content);
-    this.logger.debug('[onInvoke] Session: %o', this.session!.content);
+    this.cookie.invoke(this.headers['cookie']);
+    this.logger.debug('[onInvoke] Cookie: %o', this.cookie.content);
+    this.logger.debug('[onInvoke] Session: %o', this.session.content);
 
     if (this.validator) {
       this.logger.debug('[onInvoke] Valid request');
@@ -201,9 +204,7 @@ export class Http implements Plugin {
     this.logger.time('http');
 
     // update seesion
-    if (this.session) {
-      this.session.update();
-    }
+    this.session.update();
 
     // 处理 body
     if (data.response) {
@@ -226,7 +227,7 @@ export class Http implements Plugin {
     this.response.headers = Object.assign({
       'Content-Type': 'application/json; charset=utf-8',
       'X-Request-Id': (data.context ? data.context.request_id : new Date().getTime().toString())
-    }, this.cookie!.headers, this.response.headers);
+    }, this.cookie.headers(), this.response.headers);
 
     /* eslint-disable-next-line require-atomic-updates */
     data.response = this.response;

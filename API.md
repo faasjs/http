@@ -23,8 +23,17 @@
 | config.config | <code>object</code> | 网关配置 |
 | config.validator | <code>object</code> | 入参校验配置 |
 | config.validator.params | <code>object</code> | params 校验配置 |
+| config.validator.params.whitelist | <code>string</code> | 白名单配置 |
+| config.validator.params.onError | <code>function</code> | 自定义报错 |
+| config.validator.params.rules | <code>object</code> | 参数校验规则 |
 | config.validator.cookie | <code>object</code> | cookie 校验配置 |
+| config.validator.cookie.whitelist | <code>string</code> | 白名单配置 |
+| config.validator.cookie.onError | <code>function</code> | 自定义报错 |
+| config.validator.cookie.rules | <code>object</code> | 参数校验规则 |
 | config.validator.session | <code>object</code> | session 校验配置 |
+| config.validator.session.whitelist | <code>string</code> | 白名单配置 |
+| config.validator.session.onError | <code>function</code> | 自定义报错 |
+| config.validator.session.rules | <code>object</code> | 参数校验规则 |
 
 <a name="Http+setHeader"></a>
 
