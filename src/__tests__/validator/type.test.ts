@@ -4,7 +4,7 @@ import { Http } from '../../index';
 describe('validator/type', function () {
   describe('params', function () {
     describe('normal', function () {
-      test.each([['string', '"string"'], ['boolean', 'false'], ['number', '0'], ['array', '[]'], ['object', '{}']])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
+      test.each([['string', '"string"'], ['boolean', 'false'], ['number', '0'], ['array', '[]']])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
         const http = new Http({
           validator: {
             params: {
@@ -30,7 +30,7 @@ describe('validator/type', function () {
 
         const res2 = await handler({
           headers: { 'content-type': 'application/json' },
-          body: '{"key":null}'
+          body: '{"key":{}}'
         });
 
         expect(res2.statusCode).toEqual(500);
@@ -60,7 +60,7 @@ describe('validator/type', function () {
 
         const res = await handler({
           headers: { 'content-type': 'application/json' },
-          body: '{"key":null}'
+          body: '{"key":1}'
         });
 
         expect(res.statusCode).toEqual(500);
@@ -91,11 +91,11 @@ describe('validator/type', function () {
 
         const res = await handler({
           headers: { 'content-type': 'application/json' },
-          body: '{"key":null}'
+          body: '{"key":1}'
         });
 
         expect(res.statusCode).toEqual(500);
-        expect(res.body).toEqual('{"error":{"message":"params.rule.type key null"}}');
+        expect(res.body).toEqual('{"error":{"message":"params.rule.type key 1"}}');
       });
 
       test('return all', async function () {
@@ -126,17 +126,17 @@ describe('validator/type', function () {
 
         const res = await handler({
           headers: { 'content-type': 'application/json' },
-          body: '{"key":null}'
+          body: '{"key":1}'
         });
 
         expect(res.statusCode).toEqual(401);
         expect(res.headers.key).toEqual('value');
-        expect(res.body).toEqual('{"error":{"message":"params.rule.type key null"}}');
+        expect(res.body).toEqual('{"error":{"message":"params.rule.type key 1"}}');
       });
     });
 
     describe('array', function () {
-      test.each([['string', '"string"'], ['boolean', 'false'], ['number', '0'], ['array', '[]'], ['object', '{}']])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
+      test.each([['string', '"string"'], ['boolean', 'false'], ['number', '0'], ['array', '[]']])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
         const http = new Http({
           validator: {
             params: {
@@ -168,7 +168,7 @@ describe('validator/type', function () {
 
         const res2 = await handler({
           headers: { 'content-type': 'application/json' },
-          body: '{"key":[{"sub":null}]}'
+          body: '{"key":[{"sub":{}}]}'
         });
 
         expect(res2.statusCode).toEqual(500);
@@ -177,7 +177,7 @@ describe('validator/type', function () {
     });
 
     describe('object', function () {
-      test.each([['string', '"string"'], ['boolean', 'false'], ['number', '0'], ['array', '[]'], ['object', '{}']])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
+      test.each([['string', '"string"'], ['boolean', 'false'], ['number', '0'], ['array', '[]']])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
         const http = new Http({
           validator: {
             params: {
@@ -209,7 +209,7 @@ describe('validator/type', function () {
 
         const res2 = await handler({
           headers: { 'content-type': 'application/json' },
-          body: '{"key":{"sub":null}}'
+          body: '{"key":{"sub":{}}}'
         });
 
         expect(res2.statusCode).toEqual(500);
@@ -246,7 +246,7 @@ describe('validator/type', function () {
 
   describe('session', function () {
     describe('normal', function () {
-      test.each([['string', 'string'], ['boolean', false], ['number', 0], ['array', []], ['object', {}]])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
+      test.each([['boolean', false], ['number', 0], ['array', []], ['object', {}]])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
         const http = new Http({
           validator: {
             session: {
@@ -275,7 +275,7 @@ describe('validator/type', function () {
 
         const res2 = await handler({
           headers: {
-            cookie: `key=${http.session.encode({ key: null })}`
+            cookie: `key=${http.session.encode({ key: '' })}`
           }
         });
 
@@ -285,7 +285,7 @@ describe('validator/type', function () {
     });
 
     describe('array', function () {
-      test.each([['string', 'string'], ['boolean', false], ['number', 0], ['array', []], ['object', {}]])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
+      test.each([['boolean', false], ['number', 0], ['array', []], ['object', {}]])('is %p', async function (type: 'string' | 'boolean' | 'number', value) {
         const http = new Http({
           validator: {
             session: {
@@ -320,9 +320,8 @@ describe('validator/type', function () {
 
         const res2 = await handler({
           headers: {
-            cookie: `key=${http.session.encode({ key: [{ sub: null }] })}`
-          },
-          body: '{"key":[{"sub":null}]}'
+            cookie: `key=${http.session.encode({ key: [{ sub: '' }] })}`
+          }
         });
 
         expect(res2.statusCode).toEqual(500);
@@ -370,8 +369,7 @@ describe('validator/type', function () {
           }
         });
 
-        expect(res2.statusCode).toEqual(500);
-        expect(res2.body).toEqual(`{"error":{"message":"[session] key.sub must be a ${type}."}}`);
+        expect(res2.statusCode).toEqual(201);
       });
     });
   });

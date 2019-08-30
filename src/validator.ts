@@ -154,8 +154,8 @@ export class Validator {
           throw error;
         }
       }
-
-      if (typeof value !== 'undefined') {
+      console.log(value);
+      if (typeof value !== 'undefined' && value !== null) {
         // type
         if (rule.type) {
           if (type === 'cookie') {
