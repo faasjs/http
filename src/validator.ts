@@ -154,7 +154,7 @@ export class Validator {
           throw error;
         }
       }
-      console.log(value);
+
       if (typeof value !== 'undefined' && value !== null) {
         // type
         if (rule.type) {
