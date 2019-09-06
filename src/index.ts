@@ -2,8 +2,10 @@ import { Plugin, InvokeData, MountData, DeployData, Next } from '@faasjs/func';
 import deepMerge from '@faasjs/deep_merge';
 import Logger from '@faasjs/logger';
 import { Cookie, CookieOptions } from './cookie';
-import { Session } from './session';
-import { Validator, ValidatorConfig } from './validator';
+import { Session, SessionOptions } from './session';
+import { Validator, ValidatorOptions, ValidatorRuleOptions } from './validator';
+
+export { Cookie, CookieOptions, Session, SessionOptions, Validator, ValidatorOptions, ValidatorRuleOptions };
 
 export const ContentType: {
   [key: string]: string;
@@ -28,9 +30,9 @@ export interface HttpConfig {
     [key: string]: any;
   };
   validator?: {
-    params?: ValidatorConfig;
-    cookie?: ValidatorConfig;
-    session?: ValidatorConfig;
+    params?: ValidatorOptions;
+    cookie?: ValidatorOptions;
+    session?: ValidatorOptions;
   };
   [key: string]: any;
 }
@@ -59,10 +61,10 @@ export class Http implements Plugin {
     cookie?: CookieOptions;
     [key: string]: any;
   };
-  private validatorConfig?: {
-    params?: ValidatorConfig;
-    cookie?: ValidatorConfig;
-    session?: ValidatorConfig;
+  private validatorOptions?: {
+    params?: ValidatorOptions;
+    cookie?: ValidatorOptions;
+    session?: ValidatorOptions;
   };
   private response?: Response;
   private validator?: Validator;
@@ -93,7 +95,7 @@ export class Http implements Plugin {
     this.name = config.name;
     this.config = config.config || Object.create(null);
     if (config.validator) {
-      this.validatorConfig = config.validator;
+      this.validatorOptions = config.validator;
     }
     this.headers = Object.create(null);
     this.cookie = new Cookie(this.config.cookie || {});
@@ -132,9 +134,9 @@ export class Http implements Plugin {
     this.cookie = new Cookie(this.config.cookie || {});
     this.session = this.cookie.session;
 
-    if (this.validatorConfig) {
+    if (this.validatorOptions) {
       this.logger.debug('[onMount] prepare validator');
-      this.validator = new Validator(this.validatorConfig);
+      this.validator = new Validator(this.validatorOptions);
     }
 
     await next();

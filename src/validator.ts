@@ -2,16 +2,18 @@ import { Cookie } from './cookie';
 import { Session } from './session';
 import Logger from '@faasjs/logger';
 
-export interface ValidatorConfig {
+export interface ValidatorRuleOptions {
+  type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  required?: boolean;
+  in?: any[];
+  default?: any;
+  config?: Partial<ValidatorOptions>;
+}
+
+export interface ValidatorOptions {
   whitelist?: 'error' | 'ignore';
   rules: {
-    [key: string]: {
-      type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
-      required?: boolean;
-      in?: any[];
-      default?: any;
-      config?: Partial<ValidatorConfig>;
-    };
+    [key: string]: ValidatorRuleOptions;
   };
   onError?: (type: string, key: string | string[], value?: any) => {
     statusCode?: number;
@@ -42,9 +44,9 @@ class ValidError extends Error {
 }
 
 export class Validator {
-  public paramsConfig?: ValidatorConfig;
-  public cookieConfig?: ValidatorConfig;
-  public sessionConfig?: ValidatorConfig;
+  public paramsConfig?: ValidatorOptions;
+  public cookieConfig?: ValidatorOptions;
+  public sessionConfig?: ValidatorOptions;
   private request?: {
     params?: any;
     cookie?: Cookie;
@@ -53,9 +55,9 @@ export class Validator {
   private logger: Logger;
 
   constructor (config: {
-    params?: ValidatorConfig;
-    cookie?: ValidatorConfig;
-    session?: ValidatorConfig;
+    params?: ValidatorOptions;
+    cookie?: ValidatorOptions;
+    session?: ValidatorOptions;
   }) {
     this.paramsConfig = config.params;
     this.cookieConfig = config.cookie;
@@ -104,7 +106,7 @@ export class Validator {
 
   public validContent (type: string, params: {
     [key: string]: any;
-  }, baseKey: string, config: ValidatorConfig) {
+  }, baseKey: string, config: ValidatorOptions) {
     if (config.whitelist) {
       const paramsKeys = Object.keys(params);
       const rulesKeys = Object.keys(config.rules);
@@ -207,11 +209,11 @@ export class Validator {
             if (Array.isArray(value)) {
               // array
               for (const val of value) {
-                this.validContent(type, val, (baseKey ? `${baseKey}.${key}.` : `${key}.`), rule.config as ValidatorConfig);
+                this.validContent(type, val, (baseKey ? `${baseKey}.${key}.` : `${key}.`), rule.config as ValidatorOptions);
               }
             } else if (typeof value === 'object') {
               // object
-              this.validContent(type, value, (baseKey ? `${baseKey}.${key}.` : `${key}.`), rule.config as ValidatorConfig);
+              this.validContent(type, value, (baseKey ? `${baseKey}.${key}.` : `${key}.`), rule.config as ValidatorOptions);
             }
           }
         }

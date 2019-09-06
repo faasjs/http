@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import { Cookie } from './cookie';
 
-export interface SessionOption {
+export interface SessionOptions {
   key: string;
   secret: string;
   salt?: string;
@@ -32,7 +32,7 @@ export class Session {
   private cookie: Cookie;
   private changed?: boolean;
 
-  constructor (cookie: Cookie, config: SessionOption) {
+  constructor (cookie: Cookie, config: SessionOptions) {
     this.cookie = cookie;
 
     this.config = Object.assign({

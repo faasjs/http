@@ -1,4 +1,4 @@
-import { Session, SessionOption } from './session';
+import { Session, SessionOptions } from './session';
 import deepMerge from '@faasjs/deep_merge';
 
 export interface CookieOptions {
@@ -7,7 +7,7 @@ export interface CookieOptions {
   expires?: number;
   secure?: boolean;
   httpOnly?: boolean;
-  session?: SessionOption;
+  session?: SessionOptions;
   [key: string]: any;
 }
 
@@ -22,7 +22,7 @@ export class Cookie {
     expires: number;
     secure: boolean;
     httpOnly: boolean;
-    session: SessionOption;
+    session: SessionOptions;
   };
   private setCookie: {
     [key: string]: string;
