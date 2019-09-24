@@ -37,7 +37,7 @@ export interface HttpConfig {
   [key: string]: any;
 }
 
-interface Response {
+export interface Response {
   statusCode?: number;
   headers: {
     [key: string]: any;
@@ -54,7 +54,7 @@ export class Http implements Plugin {
   public params: any;
   public cookie: Cookie;
   public session: Session;
-  private config: {
+  public config: {
     method?: number;
     timeout?: number;
     functionName?: string;
@@ -149,9 +149,7 @@ export class Http implements Plugin {
     this.headers = data.event.headers || Object.create(null);
     this.params = Object.create(null);
     this.response = {
-      statusCode: undefined,
-      headers: Object.create(null),
-      body: undefined
+      headers: Object.create(null)
     };
 
     if (data.event.body) {
