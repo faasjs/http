@@ -208,7 +208,7 @@ export class Http implements Plugin {
 
     // 处理 body
     if (data.response) {
-      if (data.response instanceof Error) {
+      if (data.response instanceof Error || data.response.constructor.name === 'Error') {
         // 当结果是错误类型时
         this.logger.error(data.response);
         this.response.body = JSON.stringify({ error: { message: data.response.message } });
